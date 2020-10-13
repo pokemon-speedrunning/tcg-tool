@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<script type="module" src="assets/cardData.js"></script>
+<script type="module" src="assets/boosterData.js"></script>
+<script type="module" src="ptcgLib.js"></script>
+<script type="module">
+	import {getCardDataJson} from "./assets/cardData.js";
+	import {getBoosterDataJson} from "./assets/boosterData.js";
+	import {initializeGameData, generateBooster, createRandomObject} from "./ptcgLib.js";
+	let cardData = JSON.parse(getCardDataJson());
+	let boosterData = JSON.parse(getBoosterDataJson());
+	initializeGameData(cardData,boosterData);
+
+	function generateAllPacks(){
+
+		// first clear all old drawn packs, if they exist
+		document.querySelectorAll('.packDrawer').forEach(e => e.remove());
+
+		let wRNG1Input = parseInt(document.getElementById("wRNG1Input").value,16);
+		if(isNaN(wRNG1Input))
+			wRNG1Input = 0xf3;
+
+		let wRNG2Input = parseInt(document.getElementById("wRNG2Input").value,16);
+		if(isNaN(wRNG2Input))
+			wRNG2Input = 0x64;
+
+		let wRNGCounterInput = parseInt(document.getElementById("wRNGCounterInput").value,16);
+		if(isNaN(wRNGCounterInput))
+			wRNGCounterInput = 0x53;
+
+		let packType = parseInt(document.getElementById("packType").value,16);
+		if(isNaN(packType))
+			packType = 0x17;
+
+		let packSimAmt = parseInt(document.getElementById("packSimAmt").value);
+		if(isNaN(packSimAmt))
+			packSimAmt = 5;
+
+		let randomObject = createRandomObject(wRNG1Input, wRNG2Input, wRNGCounterInput);
+		for(let i = 0; i < packSimAmt; i++){
+			let rngElem = document.createElement("p");
+			rngElem.innerText = " wRNG1: 0x" + randomObject.wRNG1.toString(16).padStart(2,"0") +
+				", wRNG2: 0x" + randomObject.wRNG2.toString(16).padStart(2,"0") +
+				", wRNGCounter: 0x" + randomObject.wRNGCounter.toString(16).padStart(2,"0") + 
+				", Pack Type: 0x" + packType.toString(16).padStart(2,"0");
+			rngElem.setAttribute("style", "display:inline-block;");
+
+			let ret = generateBooster(randomObject, packType);
+			randomObject = ret.rng;
+			let packDrawElem = createElementForPack(ret.cards);
+			packDrawElem.appendChild(rngElem);
+
+			document.getElementById("packArea").appendChild(packDrawElem);
+		}
+	}
+	window.generateAllPacks = generateAllPacks;
+
+	function createElementForPack(cards){
+		let cardImgs = document.createElement("div");
+		cardImgs.setAttribute("class", "packDrawer");
+		for(let card of cards){
+			let cardImg = document.createElement("img");
+			cardImg.setAttribute("src", "assets/cardImgs/" + card.index.toString().padStart(3,"0") + ".png");
+			cardImg.setAttribute("style", "padding: 1px");
+			cardImg.setAttribute("alt", card.name);
+			cardImg.setAttribute("title", card.name);
+			cardImgs.appendChild(cardImg);
+		}
+		return cardImgs;
+	}
+</script>
+<title>Pokemon TCG for Gameboy Card Pack Simulator</title>
+</head>
+<body>
+<h1> Pokemon TCG for Gameboy Card Pack Simulator </h1>
+<p> Enter the info below and click submit to generate booster packs. Just a very simple demo, very hard to use if you're not the person who wrote the code. The first 3 text boxes can be found by using a debugger and going to those memory addresses when you're about to open the pack (such as on the PC pack selection screen). The number is how many packs you simulate. The final value, pack type, is a bit trickier. Set a debug breakpoint at 07:61C5 and input the value of 'a' when the breakpoint triggers. Alternatively, for PC packs, you can find the pack type from <a href="https://www.speedrun.com/pkmntcg/guide/j0g3n">this list</a> and then get the index for that pack type on <a href="https://github.com/pret/poketcg/blob/6c74edb245a25feaf202f9ee101774be9155bf48/src/engine/booster_packs.asm#L167">this list</a>. I promise I'm making this easier to use... Eventually.<br/><br/>If you just hit submit, a (valid) sample series of packs will generate</p>
+<h3><b>NOTE: Everything is in hex except for "Number of packs to simulate."</b></h3><br/>
+wRNG1 (0xCACA): <input class="textbox" id="wRNG1Input" type="text" maxLength="2"/><br/>
+wRNG2 (0xCACB): <input class="textbox" id="wRNG2Input" type="text" maxLength="2"/><br/>
+wRNGCounter (0xCACC): <input class="textbox" id="wRNGCounterInput" type="text" maxLength="2"/><br/>
+Number of packs to simulate: <input class="textbox" id="packSimAmt" type="text" maxLength="5"/><br/>
+pack type: <input class="textbox" id="packType" type="text" maxLength="2"/><br/>
+
+<input type="submit" value="Submit" onclick="generateAllPacks();" />
+
+<div id="packArea"></div>
+</html>
