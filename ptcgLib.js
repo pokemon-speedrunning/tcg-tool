@@ -97,7 +97,7 @@ function generateBooster_Base(wRNG1, wRNG2, wRNGCounter, packType){
 	let currentPackInfo = boosterData[packType];
 	let energyList = [], cardList = [];
 	var currentRarity = 2;
-	var typeChancesLeft = currentPackInfo.cardTypeChances; // type chances remaining
+	var typeChancesLeft = [...currentPackInfo.cardTypeChances]; // type chances remaining
 	var cardsOfRarityLeft = boosterRarities[currentPackInfo.boosterType];
 
 	// "init" - zeroes some ranges and average the card type chances
