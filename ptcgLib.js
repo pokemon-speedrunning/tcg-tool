@@ -62,6 +62,9 @@ function updateRNGSources(wRNG1, wRNG2, wRNGCounter){
 	d = ((d<<1)&0xff) + ehi;
 	a = ((d ^ e)&0xff);
 	wRNGCounter+=1;
+	if(wRNGCounter > 255){
+		wRNGCounter-=256;
+	}
 	wRNG2 = d;
 	wRNG1 = e;
 
